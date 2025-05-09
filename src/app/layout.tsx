@@ -28,6 +28,10 @@ export default function RootLayout({
     // Apply the font variable helper class (geistSans.variable) to the html tag
     <html lang="en" className={cn("h-full", geistSans.variable)} suppressHydrationWarning>
       {/* Font family is applied to body via globals.css using var(--font-geist-sans) */}
+
+      <head>
+      <meta name="google-site-verification" content="mac7aLjz9hgBPOeatEJp8fZ6RL2GRi8PeWQfgcITzFU" />
+      </head>
       <body className={cn(
         "antialiased h-full flex flex-col",
         "bg-gradient-to-br from-background to-muted dark:from-background dark:to-card",
