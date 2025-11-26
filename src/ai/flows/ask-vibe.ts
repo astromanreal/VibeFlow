@@ -29,14 +29,10 @@ export async function askVibe(input: AskVibeInput): Promise<AskVibeOutput> {
 const askVibePrompt = ai.definePrompt({
   name: 'askVibePrompt',
   input: {
-    schema: z.object({
-      query: z.string().describe('The user\u0027s question for the AI Wisdom Assistant.'),
-    }),
+    schema: AskVibeInputSchema,
   },
   output: {
-    schema: z.object({
-      response: z.string().describe('The AI Wisdom Assistant\u0027s response to the user\u0027s query.'),
-    }),
+    schema: AskVibeOutputSchema,
   },
   prompt: `You are Vibe, an AI Wisdom Assistant. Your purpose is to provide guidance and support on topics such as affirmations, manifestation, and maintaining a positive mindset.
 
@@ -45,7 +41,7 @@ const askVibePrompt = ai.definePrompt({
   Response:`,
 });
 
-const askVibeFlow = ai.defineFlow<typeof AskVibeInputSchema, typeof AskVibeOutputSchema>(
+const askVibeFlow = ai.defineFlow(
   {
     name: 'askVibeFlow',
     inputSchema: AskVibeInputSchema,

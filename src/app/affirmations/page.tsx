@@ -3,10 +3,10 @@
 
 import { useState, useEffect } from 'react';
 import type { Affirmation } from '@/services/affirmations';
-import { getAffirmationsByCategory } from '@/services/affirmations';
 import AffirmationCard from '@/components/affirmation-card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -15,17 +15,18 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription as DialogDesc,
   DialogFooter,
   DialogClose,
-  DialogDescription,
 } from "@/components/ui/dialog";
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Image as ImageIcon, Heart } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Image as ImageIcon, Heart, Star, Smile, Wind, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const categories = [
   "Self-love", "Abundance", "Health", "Confidence", "Peace",
-  "Relationships", "Purpose", "Healing", "Growth", "Presence"
+  "Relationships", "Purpose", "Healing", "Growth", "Presence",
+  "Creativity", "Forgiveness", "Courage", "Spirituality"
 ];
 
 interface GalleryAffirmation extends Affirmation {
@@ -37,7 +38,6 @@ const driveImageLinks = [
   "https://drive.google.com/file/d/11rv--B3a7c2f3OdjBp-xtO6m_g-hPNlQ/view?usp=sharing",
   "https://drive.google.com/file/d/12xU4TOc8cDxCmtVyIji0hNNk3XgcDP-M/view?usp=sharing",
   "https://drive.google.com/file/d/14N-QOy5KOsWt62k91mob1p64f3zvJ1Qn/view?usp=sharing",
-  // "https://drive.google.com/file/d/14jvtfr3AKI7HjGv1RCSTiZQOnwAY14Ah/view?usp=sharing", // Removed fourth link
   "https://drive.google.com/file/d/16LczEqzWFrNueF6L3R-AFw6EWP2jklv4/view?usp=sharing",
   "https://drive.google.com/file/d/16Nsrf8r7GJwYD_6VJsKnYyxP2hFGA4hb/view?usp=sharing",
   "https://drive.google.com/file/d/16SsOJWHuEteSZ9ovxqq2GorCoH5E_gYE/view?usp=sharing",
@@ -81,63 +81,96 @@ const galleryAffirmationTexts = [
 
 const galleryAffirmationsData: GalleryAffirmation[] = driveImageLinks.map((link, index) => {
   const fileId = link.split('/d/')[1].split('/')[0];
-  const category = categories[index % categories.length]; // Cycle through categories
-  const text = galleryAffirmationTexts[index % galleryAffirmationTexts.length]; // Cycle through texts
+  const category = categories[index % categories.length];
+  const text = galleryAffirmationTexts[index % galleryAffirmationTexts.length];
   return {
     id: `gal_img_${index + 1}`,
     category: category,
     text: text,
     imageUrl: `https://drive.google.com/uc?export=view&id=${fileId}`,
-    altText: `Affirmation for ${category.toLowerCase()}: ${text}`,
+    altText: `Visual affirmation for ${category.toLowerCase()}: ${text}`,
   };
 });
 
 
 const demoAffirmationsFullList: Affirmation[] = [
-  { id: 'aff_001', category: 'Abundance', text: 'I attract prosperity and joy with ease.' },
-  { id: 'aff_002', category: 'Abundance', text: 'I am open to receiving unlimited wealth.' },
+  // Self-love
   { id: 'sl_001', category: 'Self-love', text: 'I deeply and completely love and accept myself.' },
   { id: 'sl_002', category: 'Self-love', text: 'My self-worth is high and ever-increasing.' },
-  { id: 'sl_003', category: 'Self-love', text: 'I am worthy of love, respect, and happiness.' },
-  { id: 'sl_004', category: 'Self-love', text: 'I treat myself with kindness and compassion.' },
-  { id: 'ab_001', category: 'Abundance', text: 'Prosperity flows to me from expected and unexpected sources.' },
-  { id: 'ab_003', category: 'Abundance', text: 'I live in a universe of abundance and plenty.' }, // Note: Original ab_002 was same as aff_002, adjusted to avoid exact duplicate text for variation
-  { id: 'ab_004', category: 'Abundance', text: 'I release all resistance to attracting money.' },
-  { id: 'h_001', category: 'Health', text: 'My body is vibrant, healthy, and full of energy.' },
-  { id: 'h_002', category: 'Health', text: 'I make choices that support my well-being.' },
-  { id: 'h_003', category: 'Health', text: 'Every cell in my body vibrates with health and vitality.' },
-  { id: 'h_004', category: 'Health', text: 'I am grateful for my healthy and strong body.' },
-  { id: 'c_001', category: 'Confidence', text: 'I believe in my abilities and express myself authentically.' },
-  { id: 'c_002', category: 'Confidence', text: 'I am confident, capable, and strong.' },
-  { id: 'c_003', category: 'Confidence', text: 'I face challenges with courage and grace.' },
-  { id: 'c_004', category: 'Confidence', text: 'My confidence grows stronger every day.' },
-  { id: 'p_001', category: 'Peace', text: 'Inner peace flows through me in every moment.' },
-  { id: 'p_002', category: 'Peace', text: 'I release worry and embrace tranquility.' },
-  { id: 'p_003', category: 'Peace', text: 'My mind is calm, centered, and at ease.' },
-  { id: 'p_004', category: 'Peace', text: 'I choose peace over conflict and harmony over discord.' },
+  { id: 'sl_003', category: 'Self-love', text: 'I am enough just as I am.' },
+  { id: 'sl_004', category: 'Self-love', text: 'I treat myself with kindness and respect.' },
+  // Abundance
+  { id: 'ab_001', category: 'Abundance', text: 'I attract wealth and abundance effortlessly.' },
+  { id: 'ab_002', category: 'Abundance', text: 'I am open to receiving limitless abundance.' },
+  { id: 'ab_003', category: 'Abundance', text: 'My life is filled with prosperity.' },
+  { id: 'ab_004', category: 'Abundance', text: 'I am worthy of financial success.' },
+  // Health
+  { id: 'h_001', category: 'Health', text: 'Every cell in my body is healthy and vibrant.' },
+  { id: 'h_002', category: 'Health', text: 'I am grateful for my strong and healthy body.' },
+  { id: 'h_003', category: 'Health', text: 'I choose foods that nourish and heal me.' },
+  { id: 'h_004', category: 'Health', text: 'I am full of vitality and energy.' },
+  // Confidence
+  { id: 'c_001', category: 'Confidence', text: 'I believe in myself and my abilities.' },
+  { id: 'c_002', category: 'Confidence', text: 'I face challenges with courage and strength.' },
+  { id: 'c_003', category: 'Confidence', text: 'I radiate confidence and positivity.' },
+  { id: 'c_004', category: 'Confidence', text: 'My voice matters, and I speak with clarity.' },
+  // Peace
+  { id: 'p_001', category: 'Peace', text: 'I am calm, centered, and grounded.' },
+  { id: 'p_002', category: 'Peace', text: 'Peace begins with me.' },
+  { id: 'p_003', category: 'Peace', text: 'I let go of all that no longer serves me.' },
+  { id: 'p_004', category: 'Peace', text: 'My mind is at peace with the past.' },
+  // Relationships
   { id: 'r_001', category: 'Relationships', text: 'I attract loving and supportive relationships.' },
-  { id: 'r_002', category: 'Relationships', text: 'My relationships are built on mutual respect and love.' },
-  { id: 'r_003', category: 'Relationships', text: 'I communicate openly and honestly in my relationships.' },
-  { id: 'r_004', category: 'Relationships', text: 'I am grateful for the love that surrounds me.' },
-  { id: 'pu_001', category: 'Purpose', text: 'I am living my life purpose with passion and joy.' },
-  { id: 'pu_002', category: 'Purpose', text: 'My unique talents and gifts serve the world.' },
-  { id: 'pu_003', category: 'Purpose', text: 'I am guided towards my highest path.' },
-  { id: 'pu_004', category: 'Purpose', text: 'I make a positive difference in the world.' },
-  { id: 'he_001', category: 'Healing', text: 'I release the past and embrace healing.' },
-  { id: 'he_002', category: 'Healing', text: 'My body, mind, and spirit are healing naturally.' },
-  { id: 'he_003', category: 'Healing', text: 'I forgive myself and others, freeing myself to heal.' },
-  { id: 'he_004', category: 'Healing', text: 'I allow healing energy to flow through me.' },
-  { id: 'g_001', category: 'Growth', text: 'I am constantly evolving and growing stronger.' },
-  { id: 'g_002', category: 'Growth', text: 'I embrace change as an opportunity for growth.' },
-  { id: 'g_003', category: 'Growth', text: 'Every experience teaches me valuable lessons.' },
-  { id: 'g_004', category: 'Growth', text: 'I am expanding my potential every day.' },
-  { id: 'pre_001', category: 'Presence', text: 'I am fully present and engaged in the now.' },
-  { id: 'pre_002', category: 'Presence', text: 'I anchor myself in this moment with gratitude.' },
-  { id: 'pre_003', category: 'Presence', text: 'I observe my thoughts without judgment.' },
-  { id: 'pre_004', category: 'Presence', text: 'The present moment is where my power lies.' },
-  { id: "daily_001", category: "Presence", text: "I am grounded and centered in this present moment." },
+  { id: 'r_002', category: 'Relationships', text: 'I give and receive love freely.' },
+  { id: 'r_003', category: 'Relationships', text: 'My relationships are built on trust and respect.' },
+  { id: 'r_004', category: 'Relationships', text: 'I communicate clearly and honestly with others.' },
+  // Purpose
+  { id: 'pu_001', category: 'Purpose', text: 'I am aligned with my true purpose.' },
+  { id: 'pu_002', category: 'Purpose', text: 'My life has deep meaning and direction.' },
+  { id: 'pu_003', category: 'Purpose', text: 'I follow my passion and live my truth.' },
+  { id: 'pu_004', category: 'Purpose', text: 'Each day brings me closer to fulfilling my purpose.' },
+  // Healing
+  { id: 'he_001', category: 'Healing', text: 'I allow myself to heal deeply and fully.' },
+  { id: 'he_002', category: 'Healing', text: 'I am healing more and more every day.' },
+  { id: 'he_003', category: 'Healing', text: 'I forgive myself and others.' },
+  { id: 'he_004', category: 'Healing', text: 'My heart is open to healing and love.' },
+  // Growth
+  { id: 'g_001', category: 'Growth', text: 'I grow through every experience.' },
+  { id: 'g_002', category: 'Growth', text: 'Challenges help me evolve and improve.' },
+  { id: 'g_003', category: 'Growth', text: 'I embrace change and welcome transformation.' },
+  { id: 'g_004', category: 'Growth', text: 'I am constantly learning and evolving.' },
+  // Presence
+  { id: 'pre_001', category: 'Presence', text: 'I live fully in the present moment.' },
+  { id: 'pre_002', category: 'Presence', text: 'This moment is enough.' },
+  { id: 'pre_003', category: 'Presence', text: 'I find joy in the here and now.' },
+  { id: 'pre_004', category: 'Presence', text: 'I release worries about the future.' },
+  // Creativity
+  { id: 'cr_001', category: 'Creativity', text: 'I am a creative being, and my ideas flow effortlessly.' },
+  { id: 'cr_002', category: 'Creativity', text: 'I trust my intuition and express my unique self.' },
+  { id: 'cr_003', category: 'Creativity', text: 'Creative energy flows through me with ease and grace.' },
+  { id: 'cr_004', category: 'Creativity', text: 'I honor my imagination and use it to inspire the world.' },
+  // Forgiveness
+  { id: 'fo_001', category: 'Forgiveness', text: 'I forgive myself and release the burden of guilt.' },
+  { id: 'fo_002', category: 'Forgiveness', text: 'I let go of anger and choose compassion.' },
+  { id: 'fo_003', category: 'Forgiveness', text: 'Forgiveness sets me free from the past.' },
+  { id: 'fo_004', category: 'Forgiveness', text: 'I forgive others and give myself peace.' },
+  // Courage
+  { id: 'co_001', category: 'Courage', text: 'I am brave and face every challenge with strength.' },
+  { id: 'co_002', category: 'Courage', text: 'I have the courage to follow my dreams.' },
+  { id: 'co_003', category: 'Courage', text: 'Fear does not control me—I act with confidence.' },
+  { id: 'co_004', category: 'Courage', text: 'With every breath, I grow bolder and stronger.' },
+  // Spirituality
+  { id: 'sp_001', category: 'Spirituality', text: 'I am connected to the divine within and around me.' },
+  { id: 'sp_002', category: 'Spirituality', text: 'My soul is calm, centered, and filled with light.' },
+  { id: 'sp_003', category: 'Spirituality', text: 'I trust the universe and my path unfolds perfectly.' },
+  { id: 'sp_004', category: 'Spirituality', text: 'I nurture my spirit with love, peace, and gratitude.' },
 ];
 
+const featuredAffirmation: Affirmation = {
+  id: "daily_001",
+  category: "Presence",
+  text: "I am grounded and centered in this present moment.",
+};
 
 export default function AffirmationsPage() {
   const [affirmations, setAffirmations] = useState<Affirmation[]>([]);
@@ -149,12 +182,15 @@ export default function AffirmationsPage() {
   const [isGalleryOpen, setIsGalleryOpen] = useState(false);
   const [currentGalleryIndex, setCurrentGalleryIndex] = useState(0);
 
+  const [isFeaturedFavorite, setIsFeaturedFavorite] = useState(false);
 
   useEffect(() => {
     const storedFavorites = localStorage.getItem('favoriteAffirmations');
     if (storedFavorites) {
       try {
-        setFavorites(new Set(JSON.parse(storedFavorites)));
+        const parsedFavorites = new Set<string>(JSON.parse(storedFavorites));
+        setFavorites(parsedFavorites);
+        setIsFeaturedFavorite(parsedFavorites.has(featuredAffirmation.id));
       } catch (error) {
         console.error("Error parsing favorites from localStorage:", error);
         localStorage.removeItem('favoriteAffirmations');
@@ -164,36 +200,18 @@ export default function AffirmationsPage() {
 
   useEffect(() => {
     setLoading(true);
-    // The service getAffirmationsByCategory is now a mock returning [],
-    // as all static text affirmations are in demoAffirmationsFullList.
-    getAffirmationsByCategory(selectedCategory)
-      .then(serviceFetchedData => { // serviceFetchedData will be [] from the mock service
-        setTimeout(() => {
-          // The main source of truth for display is demoAffirmationsFullList.
-          // If serviceFetchedData were to provide additional, unique items, they'd be included here.
-          const combinedData = [...serviceFetchedData, ...demoAffirmationsFullList];
-          const uniqueAffirmations = Array.from(new Map(combinedData.map(item => [item.id, item])).values());
-          const filteredAffirmations = uniqueAffirmations.filter(aff => aff.category === selectedCategory);
-          setAffirmations(filteredAffirmations);
-          setLoading(false);
-        }, 500);
-      })
-      .catch(error => {
-        console.error("Failed to fetch affirmations:", error);
-        toast({
-          title: "Error",
-          description: "Could not load affirmations. Please try again later.",
-          variant: "destructive",
-        });
-        // Fallback to demo list if service fails (though service is mock now)
-        const filteredDemoAffirmations = demoAffirmationsFullList.filter(aff => aff.category === selectedCategory);
-        setAffirmations(filteredDemoAffirmations);
-        setLoading(false);
-      });
-  }, [selectedCategory, toast]);
+    // Simulate loading for better UX, can be removed if instantaneous update is preferred
+    setTimeout(() => {
+      const filteredAffirmations = demoAffirmationsFullList.filter(
+        aff => aff.category === selectedCategory
+      );
+      setAffirmations(filteredAffirmations);
+      setLoading(false);
+    }, 300);
+  }, [selectedCategory]);
 
 
-  const handleToggleFavorite = (id: string) => {
+  const handleToggleFavorite = (id: string, isFeatured: boolean = false) => {
     const newFavorites = new Set(favorites);
     let message = "";
     if (newFavorites.has(id)) {
@@ -204,18 +222,21 @@ export default function AffirmationsPage() {
       message = "Added to favorites";
     }
     setFavorites(newFavorites);
+    if (isFeatured) {
+        setIsFeaturedFavorite(newFavorites.has(id));
+    }
     localStorage.setItem('favoriteAffirmations', JSON.stringify(Array.from(newFavorites)));
     toast({
         title: "Success",
         description: message,
       });
   };
-
+  
   const openGallery = () => {
     setCurrentGalleryIndex(0);
     setIsGalleryOpen(true);
   };
-
+  
   const nextGalleryItem = () => {
     setCurrentGalleryIndex((prevIndex) => (prevIndex + 1) % galleryAffirmationsData.length);
   };
@@ -224,150 +245,256 @@ export default function AffirmationsPage() {
     setCurrentGalleryIndex((prevIndex) => (prevIndex - 1 + galleryAffirmationsData.length) % galleryAffirmationsData.length);
   };
 
+  const allAffirmations = [...demoAffirmationsFullList, ...galleryAffirmationsData];
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      <div className="text-center mb-8">
+    <div className="container mx-auto py-8 px-4 space-y-8">
+      <header className="text-center">
         <h1 className="text-3xl md:text-4xl font-bold text-primary mb-2">Affirmations</h1>
-        <p className="text-muted-foreground">Explore positive statements for various aspects of your life.</p>
+        <p className="text-muted-foreground max-w-2xl mx-auto">
+          Explore positive statements to reshape thoughts, shift energy, and strengthen your healing journey.
+        </p>
         <Button onClick={openGallery} variant="outline" className="mt-4 group">
             <ImageIcon className="w-5 h-5 mr-2 group-hover:text-accent transition-colors" />
             View Affirmation Gallery
         </Button>
-      </div>
+      </header>
 
-      <Tabs defaultValue={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
-        <div className="overflow-x-auto pb-2">
-             <TabsList className="mb-6 flex w-max mx-auto">
-            {categories.map(category => (
-              <TabsTrigger key={category} value={category}>
-                {category}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </div>
-
-
+      <section>
         <Card className="shadow-lg border-accent/30 bg-card/80 backdrop-blur-sm">
            <CardHeader>
-             <CardTitle className="text-2xl text-center text-secondary">{selectedCategory} Affirmations</CardTitle>
+             <CardTitle className="text-xl text-primary flex items-center gap-2">
+                <Star className="w-5 h-5 text-accent" />
+                Featured Affirmation
+             </CardTitle>
            </CardHeader>
            <CardContent>
-              <TabsContent value={selectedCategory}>
-                 {loading ? (
-                    <div className="space-y-4">
-                       {[...Array(3)].map((_, i) => (
-                         <div key={i} className="flex items-start space-x-4 p-4 rounded-lg border">
-                             <div className="flex-1 space-y-2">
-                                 <Skeleton className="h-6 w-3/4" />
-                                 <Skeleton className="h-4 w-1/4" />
-                             </div>
-                             <Skeleton className="h-10 w-10 rounded-full" />
-                         </div>
-                        ))}
-                    </div>
-                  ) : affirmations.length > 0 ? (
-                    <div className="space-y-4">
-                      {affirmations.map(affirmation => (
-                        <AffirmationCard
-                          key={affirmation.id}
-                          affirmation={affirmation}
-                          isFavorite={favorites.has(affirmation.id)}
-                          onToggleFavorite={handleToggleFavorite}
-                          className="border rounded-lg hover:bg-muted/50 transition-colors duration-200 ease-in-out"
-                        />
-                      ))}
-                    </div>
-                  ) : (
-                     <p className="text-center text-muted-foreground py-8">No affirmations found for this category yet.</p>
-                  )}
-              </TabsContent>
-            </CardContent>
+             <AffirmationCard
+                affirmation={featuredAffirmation}
+                isFavorite={isFeaturedFavorite}
+                onToggleFavorite={(id) => handleToggleFavorite(id, true)}
+                className="border-0 p-0 bg-transparent"
+             />
+           </CardContent>
          </Card>
+      </section>
 
-         {favorites.size > 0 && (
-          <Card className="mt-8 shadow-lg border-accent/30 bg-card/80 backdrop-blur-sm">
+      <Tabs defaultValue="categories" className="w-full">
+        <TabsList className="mb-6 grid w-full grid-cols-2 md:grid-cols-3">
+          <TabsTrigger value="categories">Categories</TabsTrigger>
+          <TabsTrigger value="favorites" disabled={favorites.size === 0}>
+            Favorites {favorites.size > 0 && `(${favorites.size})`}
+          </TabsTrigger>
+          <TabsTrigger value="practices" className="col-span-2 md:col-span-1">Practices</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="categories">
+            <Tabs defaultValue={selectedCategory} onValueChange={setSelectedCategory} className="w-full">
+                <div className="grid md:grid-cols-4 gap-6">
+                    <div className="md:col-span-1">
+                        <TabsList className="grid grid-cols-2 sm:grid-cols-3 md:flex md:flex-col md:w-full md:h-full md:items-stretch gap-1 h-auto">
+                            {categories.map(category => (
+                                <TabsTrigger 
+                                    key={category} 
+                                    value={category} 
+                                    className="md:justify-start data-[state=active]:border-primary data-[state=active]:border-b-2 md:data-[state=active]:border-b-0 md:data-[state=active]:border-l-2"
+                                >
+                                    {category}
+                                </TabsTrigger>
+                            ))}
+                        </TabsList>
+                    </div>
+
+                    <div className="md:col-span-3">
+                        <Card className="shadow-lg border-accent/30 bg-card/80 backdrop-blur-sm min-h-[400px]">
+                           <CardHeader>
+                             <CardTitle className="text-2xl text-center text-secondary">{selectedCategory} Affirmations</CardTitle>
+                           </CardHeader>
+                           <CardContent>
+                                {loading ? (
+                                  <div className="space-y-4">
+                                     {[...Array(3)].map((_, i) => (
+                                       <div key={i} className="flex items-start space-x-4 p-4 rounded-lg border">
+                                           <div className="flex-1 space-y-2">
+                                               <Skeleton className="h-6 w-3/4" />
+                                               <Skeleton className="h-4 w-1/4" />
+                                           </div>
+                                           <Skeleton className="h-10 w-10 rounded-full" />
+                                       </div>
+                                      ))}
+                                  </div>
+                                ) : affirmations.length > 0 ? (
+                                  <div className="space-y-4">
+                                    {affirmations.map(affirmation => (
+                                      <AffirmationCard
+                                        key={affirmation.id}
+                                        affirmation={affirmation}
+                                        isFavorite={favorites.has(affirmation.id)}
+                                        onToggleFavorite={handleToggleFavorite}
+                                        className="border rounded-lg hover:bg-muted/50 transition-colors duration-200 ease-in-out"
+                                      />
+                                    ))}
+                                  </div>
+                                ) : (
+                                   <p className="text-center text-muted-foreground py-8">No affirmations found for this category yet.</p>
+                                )}
+                            </CardContent>
+                         </Card>
+                    </div>
+                </div>
+            </Tabs>
+        </TabsContent>
+
+        <TabsContent value="favorites">
+          <Card className="shadow-lg border-accent/30 bg-card/80 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-2xl text-center text-secondary">Your Favorites</CardTitle>
+              <CardTitle className="text-2xl text-center text-secondary">Your Favorite Affirmations</CardTitle>
             </CardHeader>
             <CardContent>
-               <div className="space-y-4">
-                {Array.from(favorites)
-                  .map(favId => {
-                      const allAffirmationsForFavorites = [
-                          ...demoAffirmationsFullList, // Text affirmations
-                          ...galleryAffirmationsData, // Image affirmations from gallery
-                      ];
-                      return allAffirmationsForFavorites.find(aff => aff.id === favId);
-                  })
-                  .filter((aff): aff is Affirmation => !!aff) // Type guard to ensure aff is not undefined
-                  .map(affirmation => (
-                  <AffirmationCard
-                    key={`fav-${affirmation.id}`}
-                    affirmation={affirmation}
-                    isFavorite={true} // It's in the favorites list, so true
-                    onToggleFavorite={handleToggleFavorite}
-                    className="border rounded-lg bg-muted/30"
-                  />
-                ))}
-                 {/* This checks if any of the favorite IDs match IDs in our combined list */}
-                 {Array.from(favorites).filter(favId => [...demoAffirmationsFullList, ...galleryAffirmationsData].some(aff => aff.id === favId)).length === 0 && (
-                      <p className="text-center text-muted-foreground py-8">You haven't added any affirmations to your favorites yet.</p>
-                  )}
-              </div>
+               {favorites.size > 0 ? (
+                <div className="space-y-4">
+                  {Array.from(favorites)
+                    .map(favId => allAffirmations.find(aff => aff.id === favId))
+                    .filter((aff): aff is Affirmation => !!aff)
+                    .map(affirmation => (
+                    <AffirmationCard
+                      key={`fav-${affirmation.id}`}
+                      affirmation={affirmation}
+                      isFavorite={true}
+                      onToggleFavorite={handleToggleFavorite}
+                      className="border rounded-lg bg-muted/30"
+                    />
+                  ))}
+                </div>
+               ) : (
+                <p className="text-center text-muted-foreground py-8">You haven't added any affirmations to your favorites yet.</p>
+               )}
             </CardContent>
           </Card>
-         )}
-      </Tabs>
+        </TabsContent>
 
+        <TabsContent value="practices">
+            <Card className="shadow-lg border-accent/30 bg-card/80 backdrop-blur-sm">
+                <CardHeader>
+                    <CardTitle className="text-2xl text-center text-secondary">Affirmation Practices</CardTitle>
+                    <CardDescription className="text-center">Guided ways to deepen your affirmation practice.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <Accordion type="single" collapsible className="w-full">
+                        <AccordionItem value="mirror">
+                            <AccordionTrigger>
+                                <div className="flex items-center gap-2">
+                                    <Smile className="w-5 h-5 text-primary" />
+                                    <span>Mirror Affirmation Practice</span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                Stand or sit in front of a mirror. Make eye contact with yourself. Choose one affirmation that resonates with you today and speak it aloud 3-5 times with conviction and kindness. Notice how it feels in your body.
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="breathing">
+                            <AccordionTrigger>
+                                <div className="flex items-center gap-2">
+                                    <Wind className="w-5 h-5 text-primary" />
+                                    <span>Breathing Affirmation</span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                Find a comfortable, quiet space. Close your eyes and begin to focus on your breath. Pair an affirmation with your inhales and exhales. For example: Inhale, thinking "I am safe." Exhale, thinking "I am whole." Repeat for 2-5 minutes.
+                            </AccordionContent>
+                        </AccordionItem>
+                        <AccordionItem value="writing">
+                            <AccordionTrigger>
+                                <div className="flex items-center gap-2">
+                                    <Edit className="w-5 h-5 text-primary" />
+                                    <span>Writing Prompt</span>
+                                </div>
+                            </AccordionTrigger>
+                            <AccordionContent>
+                                Open your journal. Write down 3-5 affirmations that you want to embody. For each one, spend a few minutes writing about what it would feel like if this were already true. How would you act? What would change? This helps bridge the gap between concept and reality.
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
+                </CardContent>
+            </Card>
+        </TabsContent>
+      </Tabs>
+      
       <Dialog open={isGalleryOpen} onOpenChange={setIsGalleryOpen}>
-        <DialogContent className="w-[95vw] max-w-xl p-0 bg-card/90 backdrop-blur-md shadow-2xl rounded-xl">
+        <DialogContent className="w-[95vw] max-w-2xl p-0 bg-card/90 backdrop-blur-md shadow-2xl rounded-xl">
           <DialogHeader className="p-4 sm:p-6 border-b">
             <DialogTitle className="text-center text-primary text-xl sm:text-2xl">Affirmation Gallery</DialogTitle>
-            <DialogDescription className="text-center text-muted-foreground text-sm sm:text-base">
+            <DialogDesc className="text-center text-muted-foreground text-sm sm:text-base">
                 Visual affirmations to inspire you.
-            </DialogDescription>
+            </DialogDesc>
           </DialogHeader>
           {galleryAffirmationsData.length > 0 ? (
             <div className="p-4 sm:p-6 space-y-4">
-              <div className="relative w-full aspect-[3/4] rounded-lg overflow-hidden shadow-lg border border-accent/30">
+              <div className="relative w-full aspect-[4/5] sm:aspect-[3/4] rounded-lg overflow-hidden shadow-lg border border-accent/30 group">
                 <Image
                   key={galleryAffirmationsData[currentGalleryIndex].imageUrl}
                   src={galleryAffirmationsData[currentGalleryIndex].imageUrl}
                   alt={galleryAffirmationsData[currentGalleryIndex].altText}
                   layout="fill"
                   objectFit="cover"
-                  className="transition-opacity duration-500 ease-in-out"
+                  className="transition-all duration-500 ease-in-out group-hover:scale-105"
                   data-ai-hint={`${galleryAffirmationsData[currentGalleryIndex].category.toLowerCase()} inspiration`}
                 />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 p-4 flex flex-col justify-end">
-                  <p className="text-white text-base sm:text-lg font-semibold drop-shadow-md">
-                    {galleryAffirmationsData[currentGalleryIndex].text}
-                  </p>
-                   <p className="text-xs text-white/80 drop-shadow-sm">
-                    {galleryAffirmationsData[currentGalleryIndex].category}
-                  </p>
-                </div>
-                 <Button
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-black/20 pointer-events-none" />
+
+                {/* Prev Button */}
+                <Button
+                    onClick={prevGalleryItem}
                     variant="ghost"
                     size="icon"
-                    onClick={() => handleToggleFavorite(galleryAffirmationsData[currentGalleryIndex].id)}
-                    aria-label={favorites.has(galleryAffirmationsData[currentGalleryIndex].id) ? "Remove from favorites" : "Add to favorites"}
-                    className="absolute top-3 right-3 text-white/80 hover:text-accent bg-black/40 hover:bg-black/60 rounded-full p-2 transition-colors"
-                  >
-                    <Heart className={cn("w-5 h-5", favorites.has(galleryAffirmationsData[currentGalleryIndex].id) ? "fill-accent text-accent" : "text-white/80")} />
-                  </Button>
-              </div>
-              <div className="flex justify-between items-center pt-2">
-                <Button onClick={prevGalleryItem} variant="outline" size="icon" aria-label="Previous Affirmation" className="rounded-full">
-                  <ChevronLeft className="w-5 h-5" />
+                    aria-label="Previous Affirmation"
+                    className="absolute z-10 left-2 sm:left-4 top-1/2 -translate-y-1/2 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-black/30 text-white/80 hover:bg-black/50 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                >
+                    <ChevronLeft className="h-6 w-6 sm:h-8 sm:w-8" />
                 </Button>
+                
+                {/* Next Button */}
+                <Button
+                    onClick={nextGalleryItem}
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Next Affirmation"
+                    className="absolute z-10 right-2 sm:right-4 top-1/2 -translate-y-1/2 h-10 w-10 sm:h-12 sm:w-12 rounded-full bg-black/30 text-white/80 hover:bg-black/50 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity focus:opacity-100"
+                >
+                    <ChevronRight className="h-6 w-6 sm:h-8 sm:w-8" />
+                </Button>
+
+                <div className="absolute inset-0 p-4 flex flex-col justify-between pointer-events-none">
+                    {/* Top Right: Favorite Button */}
+                    <div className="self-end z-10 pointer-events-auto">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleToggleFavorite(galleryAffirmationsData[currentGalleryIndex].id)}
+                        aria-label={favorites.has(galleryAffirmationsData[currentGalleryIndex].id) ? "Remove from favorites" : "Add to favorites"}
+                        className="text-white/80 hover:text-accent bg-black/40 hover:bg-black/60 rounded-full transition-colors"
+                      >
+                        <Heart className={cn("w-5 h-5", favorites.has(galleryAffirmationsData[currentGalleryIndex].id) ? "fill-accent text-accent" : "text-white/80")} />
+                      </Button>
+                    </div>
+
+                    {/* Bottom Left: Text */}
+                    <div className="text-white">
+                      <p className="text-lg sm:text-xl font-semibold drop-shadow-md">
+                        {galleryAffirmationsData[currentGalleryIndex].text}
+                      </p>
+                      <p className="text-sm text-white/80 drop-shadow-sm">
+                        {galleryAffirmationsData[currentGalleryIndex].category}
+                      </p>
+                    </div>
+                </div>
+              </div>
+              
+              {/* Counter */}
+              <div className="flex justify-center items-center pt-2">
                 <span className="text-sm text-muted-foreground tabular-nums">
                   {currentGalleryIndex + 1} / {galleryAffirmationsData.length}
                 </span>
-                <Button onClick={nextGalleryItem} variant="outline" size="icon" aria-label="Next Affirmation" className="rounded-full">
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
               </div>
             </div>
           ) : (
@@ -386,5 +513,3 @@ export default function AffirmationsPage() {
     </div>
   );
 }
-
-    

@@ -15,8 +15,33 @@ const geistSans = Geist({
 // geistSans.variable from next/font (or mock) will be a class name like 'mock_var_font_geist_sans'
 
 export const metadata: Metadata = {
-  title: 'VibeFlow',
-  description: 'Your center of peace, power, and presence.',
+  title: {
+    template: '%s | VibeFlow',
+    default: 'VibeFlow | Your Guided Healing Journey',
+  },
+  description: 'A safe space for emotional healing, self-therapy tools, and guided growth. Explore affirmations, journaling, meditation, and more.',
+  openGraph: {
+    title: 'VibeFlow | Your Guided Healing Journey',
+    description: 'A safe space for emotional healing, self-therapy tools, and guided growth.',
+    url: 'https://vibeflow.app', // Replace with your actual domain
+    siteName: 'VibeFlow',
+    images: [
+      {
+        url: 'https://placehold.co/1200x630.png', // Replace with your actual OG image
+        width: 1200,
+        height: 630,
+        alt: 'VibeFlow - Your Guided Healing Journey',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'VibeFlow | Your Guided Healing Journey',
+    description: 'A safe space for emotional healing, self-therapy tools, and guided growth.',
+    images: ['https://placehold.co/1200x630.png'], // Replace with your actual Twitter card image
+  },
 };
 
 export default function RootLayout({
@@ -51,4 +76,3 @@ export default function RootLayout({
     </html>
   );
 }
-

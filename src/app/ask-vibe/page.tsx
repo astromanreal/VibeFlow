@@ -1,15 +1,17 @@
+
 'use client';
 
 import { useState, useRef, useEffect, type FormEvent } from 'react';
-import { askVibe, type AskVibeOutput } from '@/ai/flows/ask-vibe';
+import { type AskVibeOutput } from '@/ai/flows/ask-vibe';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Send, Sparkles, User } from 'lucide-react';
+import { Send, Sparkles, User, ShieldAlert } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 interface Message {
   sender: 'user' | 'ai';
@@ -44,7 +46,9 @@ export default function AskVibePage() {
     setIsLoading(true);
 
     try {
-      const aiResponse: AskVibeOutput = await askVibe({ query: input });
+      // The askVibe flow is removed, so we will mock a response
+      // const aiResponse: AskVibeOutput = await askVibe({ query: input });
+      const aiResponse: AskVibeOutput = { response: "Thank you for your question. The Ask Vibe feature is currently under maintenance. Please check back later!" };
       const aiMessage: Message = { sender: 'ai', text: aiResponse.response };
       setMessages(prev => [...prev, aiMessage]);
     } catch (error) {
@@ -68,11 +72,20 @@ export default function AskVibePage() {
 
       <Card className="flex-1 flex flex-col shadow-lg border-accent/30 bg-card/80 backdrop-blur-sm overflow-hidden">
          <CardHeader className="border-b">
-           <CardTitle className="text-xl text-secondary text-center">Your AI Wisdom Assistant</CardTitle>
+           <CardTitle className="text-xl text-secondary text-center">AI-Guided Insights for Reflection</CardTitle>
          </CardHeader>
          <CardContent className="flex-1 flex flex-col p-0">
            <ScrollArea className="flex-1 p-4" ref={scrollAreaRef}>
              <div ref={viewportRef} className="space-y-4 h-full">
+              {messages.length === 0 && (
+                 <Alert className="border-accent bg-accent/10">
+                    <ShieldAlert className="h-4 w-4 text-accent-foreground" />
+                    <AlertTitle className="text-accent-foreground">Important</AlertTitle>
+                    <AlertDescription className="text-accent-foreground/80">
+                        Vibe is an AI assistant and not a replacement for professional medical advice. If you are in crisis, please seek professional help.
+                    </AlertDescription>
+                </Alert>
+              )}
               {messages.map((message, index) => (
                 <div
                   key={index}

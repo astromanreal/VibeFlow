@@ -1,5 +1,5 @@
 
-'use client'; // Add this directive
+'use client';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CheckCircle, Users, MapPin, Clock, Headphones, Smile, MessageSquare } from "lucide-react";
@@ -28,7 +28,7 @@ export default function HowToStartMeditationPage() {
            How to Start Meditating: A Simple Guide
         </h1>
         <p className="text-lg md:text-xl text-purple-200/80">
-          Begin your journey to inner peace and mindfulness.
+          Begin your journey to inner peace and mindfulness with these easy steps.
         </p>
          <Link href="/meditation">
             <Badge variant="secondary" className="cursor-pointer hover:bg-purple-700/50 transition-colors">← Back to Meditation Sanctuary</Badge>

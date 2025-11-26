@@ -5,13 +5,14 @@ import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Volume2, Wind, Waves, Star, Clock, ListMusic, Heart, Info, BookOpen } from 'lucide-react'; // Added BookOpen
+import { Volume2, Wind, Waves, Star, Clock, ListMusic, Heart, Info, BookOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import Link from 'next/link'; // Added Link
+import Link from 'next/link';
+import { BreathingGuide } from '@/components/breathing-guide';
 
 // --- Data Structures (Placeholders) ---
 
@@ -41,7 +42,7 @@ interface SoundItemData extends PlayableItem {
 }
 
 
-interface BreathingPreset {
+export interface BreathingPreset {
   id: string;
   name: string;
   inhale: number;
@@ -61,7 +62,7 @@ const guidedMeditationsData: GuidedMeditation[] = [
   { id: 'gm4', title: 'Stress Relief Breathwork Intro', duration: '5 min', category: 'Stress Relief', type: 'audio', description: 'Quickly release tension.', sourceUrl: '#', thumbnailUrl: 'https://picsum.photos/300/200?random=4' },
 ];
 
-const breathingPresetsData: BreathingPreset[] = [
+export const breathingPresetsData: BreathingPreset[] = [
   { id: 'bp1', name: 'Box Breathing', inhale: 4, hold: 4, exhale: 4, type: 'breathing', description: 'Calm & balance: Inhale 4s, Hold 4s, Exhale 4s, Hold 4s' },
   { id: 'bp2', name: '4-7-8 Breathing', inhale: 4, hold: 7, exhale: 8, type: 'breathing', description: 'Relaxation aid: Inhale 4s, Hold 7s, Exhale 8s' },
   { id: 'bp3', name: 'Simple Relaxing Breath', inhale: 5, exhale: 5, type: 'breathing', description: 'Easy calming: Inhale 5s, Exhale 5s' },
@@ -75,143 +76,6 @@ const soundBathsData: SoundItemData[] = [
   { id: 'sb5', title: 'Forest Ambience', duration: '30 min', category: 'Relaxation', type: 'sound', description: 'Nature sounds immersion.', sourceUrl: '#', isFavorite: false },
 ];
 
-// --- Breathing Animation Component ---
-const BreathingGuide = ({ preset }: { preset: BreathingPreset }) => {
-  const [phase, setPhase] = useState<'inhale' | 'hold' | 'exhale' | 'pause'>('pause');
-  const [animationKey, setAnimationKey] = useState(0);
-  const [isRunning, setIsRunning] = useState(false);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Define the sequence of phases for the current preset
-  const cycleSteps = ['inhale'];
-  if (preset.hold && preset.hold > 0) cycleSteps.push('hold'); // Only add hold if duration > 0
-  cycleSteps.push('exhale');
-  // Add a pause phase specifically for Box Breathing after exhale
-  if (preset.name === 'Box Breathing' && preset.hold && preset.hold > 0) cycleSteps.push('pause');
-
-  // Map phase names to their durations in milliseconds
-  const phaseDurations: Record<string, number> = {
-      inhale: preset.inhale * 1000,
-      hold: (preset.hold || 0) * 1000,
-      exhale: preset.exhale * 1000,
-      // Pause duration is same as hold for Box Breathing, 0 otherwise
-      pause: (preset.name === 'Box Breathing' ? (preset.hold || 0) : 0) * 1000,
-  };
-
-  // Cleanup function: Clear interval on unmount or when preset changes
-  useEffect(() => {
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-        setIsRunning(false);
-        setPhase('pause');
-      }
-    };
-  }, [preset]); // Re-run effect if preset changes
-
-  // Reset animation state when the preset changes
-  useEffect(() => {
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    setIsRunning(false);
-    setPhase('pause');
-    setAnimationKey(prev => prev + 1); // Force re-render of the visual element
-  }, [preset]);
-
-  const startStopBreathing = () => {
-     if (isRunning) {
-       // --- Stop Breathing ---
-       if (intervalRef.current) {
-         clearInterval(intervalRef.current);
-         intervalRef.current = null;
-       }
-       setIsRunning(false);
-       setPhase('pause'); // Reset phase to initial state
-       setAnimationKey(prev => prev + 1); // Trigger visual reset
-     } else {
-       // --- Start Breathing ---
-       setIsRunning(true);
-       let currentPhaseIndex = 0;
-       setPhase(cycleSteps[currentPhaseIndex] as any); // Start with the first phase (inhale)
-       setAnimationKey(prev => prev + 1); // Trigger animation reset/start
-
-       // Function to run a single cycle phase
-       const runCycle = () => {
-          const currentPhase = cycleSteps[currentPhaseIndex];
-          setPhase(currentPhase as any);
-          const duration = phaseDurations[currentPhase];
-
-          // Skip phases with duration 0 or less
-          if (duration <= 0) {
-               currentPhaseIndex = (currentPhaseIndex + 1) % cycleSteps.length;
-               runCycle(); // Move immediately to the next phase
-               return;
-          }
-
-
-          // Set a timeout for the duration of the current phase
-          intervalRef.current = setTimeout(() => {
-             // Move to the next phase in the cycle
-             currentPhaseIndex = (currentPhaseIndex + 1) % cycleSteps.length;
-             runCycle(); // Recursively call to continue the cycle
-          }, duration);
-       };
-
-       runCycle(); // Start the first phase
-     }
-   };
-
-
-  return (
-    <div className="flex flex-col items-center space-y-6">
-      <div
-        key={animationKey} // Using key to reset CSS animation state if needed
-        className={cn(
-          "relative w-48 h-48 rounded-full border-4 border-secondary flex items-center justify-center text-center transition-transform duration-500 ease-in-out",
-          "bg-gradient-to-br from-purple-500/20 via-transparent to-blue-500/20",
-          "transform", // Base transform class for scaling
-           // Apply scaling based on the current phase when running
-           isRunning && phase === 'inhale' && 'scale-110',
-           isRunning && phase === 'hold' && 'scale-110', // Stay expanded during hold
-           isRunning && phase === 'exhale' && 'scale-90',
-           isRunning && phase === 'pause' && 'scale-90' // Stay contracted during pause (for Box Breathing)
-        )}
-        style={{
-           // Synchronize CSS transition duration with the current phase's duration
-           // Use a default duration when not running for smooth reset
-           transitionDuration: isRunning && phaseDurations[phase] > 0 ? `${phaseDurations[phase]/1000}s` : '0.5s'
-        }}
-      >
-        <div className="text-center">
-             {/* Display the current phase or "Ready?" */}
-            <p className="text-lg font-semibold text-purple-100 capitalize">{isRunning ? phase : "Ready?"}</p>
-             {/* Display the duration of the current phase while running */}
-             {isRunning && phaseDurations[phase] > 0 && (
-                <p className="text-sm text-purple-300/80">
-                 {phase === 'inhale' && `${preset.inhale}s`}
-                 {phase === 'hold' && preset.hold && `${preset.hold}s`}
-                 {phase === 'exhale' && `${preset.exhale}s`}
-                 {/* Show pause duration only for Box Breathing */}
-                 {phase === 'pause' && preset.name === 'Box Breathing' && preset.hold && `${preset.hold}s Pause`}
-                </p>
-             )}
-        </div>
-      </div>
-
-       <Button
-          onClick={startStopBreathing}
-          variant="secondary"
-          className="bg-purple-600 hover:bg-purple-700 text-white px-8 py-3 text-lg rounded-full shadow-lg transition-all duration-300 ease-in-out hover:scale-105 active:scale-95"
-       >
-         {isRunning ? 'Stop Breathing' : 'Start Breathing'}
-       </Button>
-
-    </div>
-  );
-};
 
 // --- Meditation Page Component ---
 
@@ -306,7 +170,7 @@ export default function MeditationPage() {
           Meditation Sanctuary
         </h1>
         <p className="text-lg md:text-xl text-purple-200/80">
-          Find your inner peace and calm.
+          Find your inner peace and calm with our mindfulness and meditation tools.
         </p>
       </header>
 
@@ -358,7 +222,7 @@ export default function MeditationPage() {
                  {meditation.thumbnailUrl && (
                      <Image
                         src={meditation.thumbnailUrl}
-                        alt={meditation.title}
+                        alt={`Visual for ${meditation.title} guided meditation.`}
                         width={300}
                         height={150}
                         className="w-full h-36 object-cover"
