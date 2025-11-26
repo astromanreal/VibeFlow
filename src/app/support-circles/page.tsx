@@ -6,17 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { LucideIcon } from 'lucide-react';
-import type { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Anonymous Support Circles | VibeFlow',
-  description: 'Connect with peers in a safe, anonymous space. Share experiences and find support in themed groups for anxiety, grief, healing, and more.',
-  openGraph: {
-    title: 'Anonymous Support Circles | VibeFlow',
-    description: 'Find support and connection in themed, anonymous peer groups.',
-    images: [{ url: 'https://placehold.co/1200x630.png', alt: 'An icon of multiple users representing a support circle' }],
-  },
-};
 
 export interface SupportCircle {
   id: string;
