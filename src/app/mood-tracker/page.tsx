@@ -1,6 +1,6 @@
 
 import { Suspense } from 'react';
-import MoodTrackerContent from '@/app/mood-tracker/mood-tracker-content';
+import MoodTrackerContent from './mood-tracker-content';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { HeartPulse } from 'lucide-react';
